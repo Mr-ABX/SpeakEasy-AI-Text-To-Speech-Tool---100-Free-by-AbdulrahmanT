@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text-to-Speech by Abdulrahman</title>
+  <style>
+    :root {
+      --bg-light: #f9f9f9;
+      --bg-dark: #121212;
+      --text-light: #000;
+      --text-dark: #fff;
+      --highlight: #fff59d;
+      --primary: linear-gradient(145deg, #6a11cb, #2575fc);
+      --rounded: 12px;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      padding: 20px;
+      max-width: 840px;
+      margin: auto;
+      transition: all 0.3s ease;
+    }
+
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    textarea, select, input[type='range'], button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      font-size: 1rem;
+      border-radius: var(--rounded);
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    .controls, .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .controls button, .presets button {
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .presets button {
+      background: #eee;
+      color: #000;
+    }
+
+    .presets button:hover {
+      background: #ccc;
+    }
+
+    .range-group {
+      margin-top: 1rem;
+    }
+
+    .range-group label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+
+    #highlighted {
+      margin-top: 10px;
+      padding: 10px;
+      background: var(--highlight);
+      border-radius: var(--rounded);
+    }
+
+    .toggle-mode {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+
+    .toggle-mode button {
+      font-size: 0.9rem;
+      background: none;
+      color: inherit;
+      text-decoration: underline;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .extra-links {
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .extra-links span {
+      text-decoration: underline;
+      cursor: pointer;
+      margin: 0 10px;
+      display: inline-block;
+    }
+
+    .info-box {
+      display: none;
+      font-size: 0.9rem;
+      background: #e0f7fa;
+      padding: 12px;
+      border-radius: var(--rounded);
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 0.9rem;
+      text-align: center;
+      color: gray;
+    }
+
+    @media (max-width: 600px) {
+      .controls button, .presets button {
+        flex: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toggle-mode">
+    <button onclick="toggleDarkMode()">🌓 Toggle Dark Mode</button>
+  </div>
+
+  <h2>🎙️ Free Text-to-Speech Tool</h2>
+
+  <textarea id="text" rows="5" placeholder="Type your text here..."></textarea>
+  <select id="voices"></select>
+
+  <div class="range-group">
+    <label for="rate">Speed: <span id="rate-value">1</span>x</label>
+    <input type="range" id="rate" min="0.5" max="2" value="1" step="0.1"/>
+  </div>
+
+  <div class="range-group">
+    <label for="pitch">Pitch: <span id="pitch-value">1</span></label>
+    <input type="range" id="pitch" min="0" max="2" value="1" step="0.1"/>
+  </div>
+
+  <div class="range-group">
+    <label for="volume">Volume: <span id="volume-value">1</span></label>
+    <input type="range" id="volume" min="0" max="1" value="1" step="0.1"/>
+  </div>
+
+  <div class="controls">
+    <button onclick="speak()">🔊 Speak</button>
+    <button onclick="pauseSpeech()">⏸️ Pause</button>
+    <button onclick="resumeSpeech()">▶️ Resume</button>
+    <button onclick="cancelSpeech()">❌ Cancel</button>
+  </div>
+
+  <div class="presets">
+    <button onclick="applyPreset('narrator')">🎙️ Narrator</button>
+    <button onclick="applyPreset('tiktok')">⚡ TikTok Style</button>
+    <button onclick="applyPreset('deep')">🧠 Deep Voice</button>
+  </div>
+
+  <div id="highlighted"></div>
+
+  <div class="extra-links">
+    <span onclick="toggleInstructions()">📥 How to Download Audio</span>
+    <span onclick="toggleInfo()">ℹ️ Info & Supported Browsers</span>
+  </div>
+
+  <div class="info-box" id="instructionsBox">
+    🔽 <strong>To download audio:</strong><br/>
+    - This tool uses your browser's built-in voice engine and doesn’t directly support audio saving.<br/>
+    - Use screen/audio recorders like <b>OBS Studio</b>, <b>Loom</b>, or <b>ShareX</b>.<br/>
+    - Start recording, play the voice, then save the clip as audio or video.
+  </div>
+
+  <div class="info-box" id="infoBox">
+    ℹ️ <strong>Tool Info:</strong><br/>
+    - 100% free & privacy-safe (no APIs or tracking)<br/>
+    - Works best on <b>Google Chrome, Microsoft Edge, Firefox</b><br/>
+    - Safari/iOS may not show all voices<br/>
+    - Dark mode supported & mobile responsive
+  </div>
+
+  <div class="footer">
+    Made with ❤️ by Abdulrahman • INFNI-T
+  </div>
+
+  <script>
+    const synth = window.speechSynthesis;
+    const textInput = document.getElementById("text");
+    const voiceSelect = document.getElementById("voices");
+    const rateInput = document.getElementById("rate");
+    const pitchInput = document.getElementById("pitch");
+    const volumeInput = document.getElementById("volume");
+    const rateValue = document.getElementById("rate-value");
+    const pitchValue = document.getElementById("pitch-value");
+    const volumeValue = document.getElementById("volume-value");
+    const highlightBox = document.getElementById("highlighted");
+    const infoBox = document.getElementById("infoBox");
+    const instructionsBox = document.getElementById("instructionsBox");
+
+    let voices = [];
+
+    function populateVoices() {
+      voices = synth.getVoices();
+      if (voices.length === 0) {
+        setTimeout(populateVoices, 500);
+        return;
+      }
+      voiceSelect.innerHTML = "";
+      voices.forEach((voice, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        voiceSelect.appendChild(option);
+      });
+    }
+
+    speechSynthesis.onvoiceschanged = populateVoices;
+    populateVoices();
+
+    function speak() {
+      synth.cancel();
+      const text = textInput.value;
+      highlightBox.innerHTML = text;
+
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.voice = voices[voiceSelect.value];
+      utter.rate = parseFloat(rateInput.value);
+      utter.pitch = parseFloat(pitchInput.value);
+      utter.volume = parseFloat(volumeInput.value);
+
+      utter.onboundary = (event) => {
+        if (event.name === "word") {
+          const words = text.split(" ");
+          const currentWordIndex = event.charIndex;
+          let highlighted = "";
+          for (let i = 0; i < words.length; i++) {
+            if (text.indexOf(words[i]) <= currentWordIndex) {
+              highlighted += `<mark>${words[i]}</mark> `;
+            } else {
+              highlighted += words[i] + " ";
+            }
+          }
+          highlightBox.innerHTML = highlighted;
+        }
+      };
+
+      synth.speak(utter);
+    }
+
+    function pauseSpeech() {
+      if (synth.speaking && !synth.paused) synth.pause();
+    }
+
+    function resumeSpeech() {
+      if (synth.paused) synth.resume();
+    }
+
+    function cancelSpeech() {
+      synth.cancel();
+      highlightBox.innerHTML = "";
+    }
+
+    function applyPreset(type) {
+      if (type === "narrator") {
+        rateInput.value = 0.9;
+        pitchInput.value = 1;
+      } else if (type === "tiktok") {
+        rateInput.value = 1.6;
+        pitchInput.value = 1.2;
+      } else if (type === "deep") {
+        rateInput.value = 0.8;
+        pitchInput.value = 0.6;
+      }
+      rateValue.textContent = rateInput.value;
+      pitchValue.textContent = pitchInput.value;
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+      const isDark = document.body.classList.contains("dark");
+      localStorage.setItem("ttsDarkMode", isDark);
+    }
+
+    function toggleInfo() {
+      infoBox.style.display = infoBox.style.display === "none" ? "block" : "none";
+    }
+
+    function toggleInstructions() {
+      instructionsBox.style.display = instructionsBox.style.display === "none" ? "block" : "none";
+    }
+
+    window.onload = () => {
+      const savedMode = localStorage.getItem("ttsDarkMode");
+      if (savedMode === "true") {
+        document.body.classList.add("dark");
+      }
+    };
+
+    rateInput.addEventListener("input", () => rateValue.textContent = rateInput.value);
+    pitchInput.addEventListener("input", () => pitchValue.textContent = pitchInput.value);
+    volumeInput.addEventListener("input", () => volumeValue.textContent = volumeInput.value);
+  </script>
+
+</body>
+</html>
